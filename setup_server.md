@@ -4,7 +4,7 @@ cd
 apt-get update
 su -
 apt-get install sudo -y
-git clone https://github.com/coqui-ai/xtts-streaming-server
+git clone https://github.com/cyai/xtts-streaming-server
 cd xtts-streaming-server
 pip install virtualenv
 virtualenv env
