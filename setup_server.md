@@ -4,6 +4,9 @@ cd
 apt-get update
 su -
 apt-get install sudo -y
+
+# Wait for the user to be created
+
 git clone https://github.com/cyai/xtts-streaming-server
 cd xtts-streaming-server
 pip install virtualenv
