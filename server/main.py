@@ -137,7 +137,7 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
         enable_text_splitting=True,
     )
 
-    print("Chunks: ", chunks) 
+    print("Chunks: ", dir(chunks))
     for chunk in chunks:
         print("Chunk: ", chunk)
         chunk = postprocess(chunk)
