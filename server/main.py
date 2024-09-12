@@ -133,8 +133,8 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
         language,
         gpt_cond_latent,
         speaker_embedding,
-        stream_chunk_size=stream_chunk_size,
-        enable_text_splitting=True,
+        # stream_chunk_size=stream_chunk_size,
+        # enable_text_splitting=True,
     )
 
     print("Chunks: ", dir(chunks))
