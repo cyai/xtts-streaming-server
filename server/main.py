@@ -139,6 +139,8 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
 
     print("Chunks: ", chunks) 
     for i, chunk in enumerate(chunks):
+        print("Chunk: ", chunk)
+        print("i: ", i)
         chunk = postprocess(chunk)
         if i == 0 and add_wav_header:
             yield encode_audio_common(b"", encode_base64=False)
