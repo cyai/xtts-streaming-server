@@ -19,11 +19,13 @@ from TTS.utils.manage import ModelManager
 torch.set_num_threads(int(os.environ.get("NUM_THREADS", os.cpu_count())))
 device = torch.device("cuda" if os.environ.get("USE_CPU", "0") == "0" else "cpu")
 if not torch.cuda.is_available() and device == "cuda":
-    raise RuntimeError("CUDA device unavailable, please use Dockerfile.cpu instead.") 
+    raise RuntimeError("CUDA device unavailable, please use Dockerfile.cpu instead.")
 
 custom_model_path = os.environ.get("CUSTOM_MODEL_PATH", "/app/tts_models")
 
-if os.path.exists(custom_model_path) and os.path.isfile(custom_model_path + "/config.json"):
+if os.path.exists(custom_model_path) and os.path.isfile(
+    custom_model_path + "/config.json"
+):
     model_path = custom_model_path
     print("Loading custom model from", model_path, flush=True)
 else:
@@ -38,7 +40,12 @@ print("Loading XTTS", flush=True)
 config = XttsConfig()
 config.load_json(os.path.join(model_path, "config.json"))
 model = Xtts.init_from_config(config)
-model.load_checkpoint(config, checkpoint_dir=model_path, eval=True, use_deepspeed=True if device == "cuda" else False)
+model.load_checkpoint(
+    config,
+    checkpoint_dir=model_path,
+    eval=True,
+    use_deepspeed=True if device == "cuda" else False,
+)
 model.to(device)
 print("XTTS Loaded.", flush=True)
 
@@ -108,14 +115,17 @@ class StreamingInputs(BaseModel):
 
 
 def predict_streaming_generator(parsed_input: dict = Body(...)):
-    speaker_embedding = torch.tensor(parsed_input.speaker_embedding).unsqueeze(0).unsqueeze(-1)
-    gpt_cond_latent = torch.tensor(parsed_input.gpt_cond_latent).reshape((-1, 1024)).unsqueeze(0)
-    text = parsed_input.text
-    language = parsed_input.language
+    speaker_embedding = (
+        torch.tensor(parsed_input["speaker_embedding"]).unsqueeze(0).unsqueeze(-1)
+    )
+    gpt_cond_latent = (
+        torch.tensor(parsed_input["gpt_cond_latent"]).reshape((-1, 1024)).unsqueeze(0)
+    )
+    text = parsed_input["text"]
+    language = parsed_input["language"]
 
-    stream_chunk_size = int(parsed_input.stream_chunk_size)
-    add_wav_header = parsed_input.add_wav_header
-
+    stream_chunk_size = int(parsed_input["stream_chunk_size"])
+    add_wav_header = parsed_input["add_wav_header"]
 
     chunks = model.inference_stream(
         text,
@@ -123,7 +133,7 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
         gpt_cond_latent,
         speaker_embedding,
         stream_chunk_size=stream_chunk_size,
-        enable_text_splitting=True
+        enable_text_splitting=True,
     )
 
     for i, chunk in enumerate(chunks):
@@ -142,16 +152,22 @@ def predict_streaming_endpoint(parsed_input: StreamingInputs):
         media_type="audio/wav",
     )
 
+
 class TTSInputs(BaseModel):
     speaker_embedding: List[float]
     gpt_cond_latent: List[List[float]]
     text: str
     language: str
 
+
 @app.post("/tts")
 def predict_speech(parsed_input: TTSInputs):
-    speaker_embedding = torch.tensor(parsed_input.speaker_embedding).unsqueeze(0).unsqueeze(-1)
-    gpt_cond_latent = torch.tensor(parsed_input.gpt_cond_latent).reshape((-1, 1024)).unsqueeze(0)
+    speaker_embedding = (
+        torch.tensor(parsed_input.speaker_embedding).unsqueeze(0).unsqueeze(-1)
+    )
+    gpt_cond_latent = (
+        torch.tensor(parsed_input.gpt_cond_latent).reshape((-1, 1024)).unsqueeze(0)
+    )
     text = parsed_input.text
     language = parsed_input.language
 
@@ -172,14 +188,27 @@ def get_speakers():
     if hasattr(model, "speaker_manager") and hasattr(model.speaker_manager, "speakers"):
         return {
             speaker: {
-                "speaker_embedding": model.speaker_manager.speakers[speaker]["speaker_embedding"].cpu().squeeze().half().tolist(),
-                "gpt_cond_latent": model.speaker_manager.speakers[speaker]["gpt_cond_latent"].cpu().squeeze().half().tolist(),
+                "speaker_embedding": model.speaker_manager.speakers[speaker][
+                    "speaker_embedding"
+                ]
+                .cpu()
+                .squeeze()
+                .half()
+                .tolist(),
+                "gpt_cond_latent": model.speaker_manager.speakers[speaker][
+                    "gpt_cond_latent"
+                ]
+                .cpu()
+                .squeeze()
+                .half()
+                .tolist(),
             }
             for speaker in model.speaker_manager.speakers.keys()
         }
     else:
         return {}
-        
+
+
 @app.get("/languages")
 def get_languages():
     return config.languages
