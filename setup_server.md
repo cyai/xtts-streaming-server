@@ -1,4 +1,5 @@
 ## Setup server:
+
 ```bash
 cd
 apt-get update
@@ -24,12 +25,13 @@ export COQUI_TOS_AGREED=1
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-
 ## Setup demo:
+
 ```bash
 cd
 cd xtts-streaming-server
 source env/bin/activate
 pip install -r test/requirements.txt
+apt-get install -y ffmpeg
 python demo.py
 ```
