@@ -137,6 +137,7 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
         enable_text_splitting=True,
     )
 
+    print("Chunks: ", chunks) 
     for i, chunk in enumerate(chunks):
         chunk = postprocess(chunk)
         if i == 0 and add_wav_header:
